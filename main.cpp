@@ -66,30 +66,56 @@ inline T lcm(T a, T b) {
     return a / gcd(a, b) * b;
 }
 
+template<typename T>
+struct SegmentTree {
+        size_t n;
+        vector<T> data;
+        function<T(const T &, const T &)> operation;
+
+    explicit SegmentTree(const vector<T> &a){
+        n = a.sz;
+        data.resize(4*n);
+        treeBuild(a, 0, 0, n-1);
+    }
+    void treeBuild(const vector<T>& a, size_t i, size_t tl, size_t tr){
+        if(tr - tl == 1) {
+            data[i] = a[tl];
+            return;
+        }
+        size_t tm = (tr + tl) / 2;
+        treeBuild(data, a, 2 * i + 1, tl, tm);
+        treeBuild(data, a, 2 * i + 2, tm, tr);
+        data[i] = operation(data[2*i + 1], data[2*i + 2]);
+    }
+
+    T query(size_t a, size_t b) {
+        return query(0, 0, n-1, a, b);
+    }
+    T query(size_t i, size_t sl, size_t sr, size_t ql, size_t qr){
+        if((qr <= sr) && (ql <= sl)) return data[i];
+        size_t sm = (sl + sr) / 2;
+        if(qr <= sm) return query(i*2 + 1, sl, sm, ql, min(qr, sm));
+        if(ql > sm) return query(i*2 + 2, sm+1, sr, max(sm+1, ql), qr);
+        return operation(query(2*i + 1, sl, sm, ql, min(qr, sm)), query(i*2 + 2, sm+1, sr, max(sm+1, ql), qr));
+    }
+    void modify(size_t p, T x){
+        modify(0, 0, n-1, p, x);
+    }
+
+    void modify(size_t i, size_t sl, size_t sr, size_t p, T x){
+        if(sl == sr) {
+            data[i] = operation(x, data[i]);
+            return;
+        }
+        size_t sm = (sl + sr) / 2;
+        if(p <= sm) modify(2 * i + 1, sl, sm, p, x);
+        else modify(2 * i + 2, sm+1, sr, p, x);
+        data[i] = operation(data[2*i+1], data[2*i+2]);
+    }
+};
 
 void solve() {
-    int n;
-    cin >> n;
-    vector<vector<int>> c(n, vector<int>(n));
-    c.resize(n, vector<int>(n, 0));
-    fori(0, n){
-        forj(0, n){
-            cin >> c[i][j];
-        }
-    }
-    vector<int> path(n-1, 0);
-    iota(path.begin(), path.end(), 1);
-    int res = INF;
-    do{
-        int cur = 0;
-        int prev = 0;
-        forel(path){
-            cur += c[prev][el];
-            prev = el;
-        }
-        res = min(res, cur);
-    } while(next_permutation(path.bg, path.end()));
-    cout << res;
+
 }
 
 signed main() {

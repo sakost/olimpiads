@@ -65,54 +65,49 @@ template<typename T>
 inline T lcm(T a, T b) {
     return a / gcd(a, b) * b;
 }
+typedef vector<vector<int>> graph;
 
-template<typename T>
-struct SegmentTree {
-        size_t n;
-        vector<T> data;
-        function<T(const T &, const T &)> operation;
+const int dx[] = {1, 0, -1, 0};
+const int dy[] = {0, 1, 0, -1};
 
-    explicit SegmentTree(const vector<T> &a){
-        n = a.sz;
-        data.resize(4*n);
-        treeBuild(a, 0, 0, n-1);
-    }
-    void treeBuild(const vector<T>& a, size_t i, size_t tl, size_t tr){
-        if(tr - tl == 1) {
-            data[i] = a[tl];
-            return;
+vector<int> bfs(const graph& g, int s, int s0){
+    int n = g.sz;
+    queue<int> q;
+    q.push(s);
+    vector<char> used(n);
+    used[s] = true;
+    vector<int> dest(n), path(n,-1);
+    while(!q.empty()){
+        int v = q.front();
+        q.pop();
+        fori(0, g[v].sz){
+            int to = g[v][i];
+            if(!used[to]){
+                used[to] = true;
+                q.push(to);
+                dest[to] = dest[v] + 1;
+                path[to] = v;
+                if(to == s0) return path;
+            }
         }
-        size_t tm = (tr + tl) / 2;
-        treeBuild(data, a, 2 * i + 1, tl, tm);
-        treeBuild(data, a, 2 * i + 2, tm, tr);
-        data[i] = operation(data[2*i + 1], data[2*i + 2]);
     }
+    return path;
+}
 
-    T query(size_t a, size_t b) {
-        return query(0, 0, n-1, a, b);
+int ind = 0;
+bool dfs(int s,int p, const graph& g, vector<int>& used, vector<int> &path, int v, vector<int>&indexes){
+    used[s] = 1;
+    forel(g[s]){
+        if(el == p) continue;
+//        if(path[el] == -1)
+        if(used[el])continue;
+        path[el] = s;
+        indexes[el] = ind++;
+        if(el == v) return true;
+        if(dfs(el, s, g, used, path, v, indexes)) return true;
     }
-    T query(size_t i, size_t sl, size_t sr, size_t ql, size_t qr){
-        if((qr <= sr) && (ql <= sl)) return data[i];
-        size_t sm = (sl + sr) / 2;
-        if(qr <= sm) return query(i*2 + 1, sl, sm, ql, min(qr, sm));
-        if(ql > sm) return query(i*2 + 2, sm+1, sr, max(sm+1, ql), qr);
-        return operation(query(2*i + 1, sl, sm, ql, min(qr, sm)), query(i*2 + 2, sm+1, sr, max(sm+1, ql), qr));
-    }
-    void modify(size_t p, T x){
-        modify(0, 0, n-1, p, x);
-    }
-
-    void modify(size_t i, size_t sl, size_t sr, size_t p, T x){
-        if(sl == sr) {
-            data[i] = operation(x, data[i]);
-            return;
-        }
-        size_t sm = (sl + sr) / 2;
-        if(p <= sm) modify(2 * i + 1, sl, sm, p, x);
-        else modify(2 * i + 2, sm+1, sr, p, x);
-        data[i] = operation(data[2*i+1], data[2*i+2]);
-    }
-};
+    return false;
+}
 
 void solve() {
 

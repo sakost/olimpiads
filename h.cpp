@@ -66,7 +66,45 @@ inline T lcm(T a, T b) {
     return a / gcd(a, b) * b;
 }
 
+deque<int> find(const string& s){
+    deque<int> res;
+    char cur = s[0];
+    int start = 0, ind = 0;
+    while(ind != s.sz) {
+        while (ind < s.sz && cur == s[ind]) {
+            ind++;
+        }
+        cur = s[ind];
+        if (ind == s.sz) {
+            res.push_back(ind - start);
+        }else{
+            res.push_back(ind - start);
+            start = ind;
+        }
+    }
+
+
+    if(s.front() == s.back() && res.sz > 1){
+        res.front() += res.back();
+        res.pop_back();
+    }
+    return res;
+}
+
+void fail(){
+    cout << -1 << endl;
+}
+
 void solve() {
+    string s1, s2, s3;
+    cin >> s1 >> s2 >> s3;
+    int n = s1.sz;
+    deque<int> a1 = find(s1), a2 = find(s2), a3 = find(s3);
+
+    if(a1.sz != a2.sz || a1.sz != a3.sz || a2.sz != a3.sz){
+        return fail();
+    }
+
 
 }
 

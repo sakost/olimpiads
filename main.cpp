@@ -66,8 +66,23 @@ inline T lcm(T a, T b) {
     return a / gcd(a, b) * b;
 }
 
-void solve() {
+void generate(uint n, int cnt_l, int cnt_r, const string& s){
+    if (cnt_l + cnt_r == n<<1u){
+        cout << s << '\n';
+        return;
+    }
+    if(cnt_l < n){
+        generate(n, cnt_l+1, cnt_r, s + '(');
+    }
+    if(cnt_l > cnt_r){
+        generate(n, cnt_l, cnt_r+1, s + ')');
+    }
+}
 
+void solve() {
+    int n;
+    cin >> n;
+    generate(n, 0, 0, "");
 }
 
 signed main() {

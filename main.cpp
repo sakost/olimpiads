@@ -53,7 +53,8 @@ const ld r2d = 180 / pi;
 
 // simple functions
 template<typename T>
-inline T gcd(T a, T b) {
+enable_if_t < is_integral_v < T >, T >
+inline gcd(T a, T b) {
     while (a) {
         b %= a;
         swap(a, b);
@@ -62,27 +63,110 @@ inline T gcd(T a, T b) {
 }
 
 template<typename T>
-inline T lcm(T a, T b) {
+enable_if_t < is_integral_v < T >, T >
+inline lcm(T a, T b) {
     return a / gcd(a, b) * b;
 }
 
-void generate(uint n, int cnt_l, int cnt_r, const string& s){
-    if (cnt_l + cnt_r == n<<1u){
-        cout << s << '\n';
-        return;
+template <class T>
+struct tData{
+    T min, max;
+};
+
+template<class T>
+class DSU{
+public:
+    explicit DSU()= default;
+
+    void make_set(T v){
+        parent[v] = v;
+        size[v] = 1;
+        data[v] = {v, v};
     }
-    if(cnt_l < n){
-        generate(n, cnt_l+1, cnt_r, s + '(');
+
+    T find_set(T v){
+        if(v == parent[v]){
+            return v;
+        }
+        return parent[v] = find_set(parent[v]);
     }
-    if(cnt_l > cnt_r){
-        generate(n, cnt_l, cnt_r+1, s + ')');
+
+    T union_sets(T a, T b){
+        a = find_set(a);
+        b = find_set(b);
+
+        if(a != b){
+            if(size[a] < size[b]){
+                swap(a, b);
+            }
+            parent[b] = a;
+            size[a] += size[b];
+            data[a] = {min(data[b].min, data[a].min), max(data[b].max, data[a].max)};
+        }
+        return a;
     }
+
+    T count_size(T a){
+        return size[a];
+    }
+
+    tData<T> getData(T v){
+        return data[v];
+    }
+
+private:
+    map<T, T> parent;
+    map<T, size_t> size;
+    map<T, tData <T> > data;
+};
+
+
+using Graph = vector< vector< int > >;
+
+struct Edge{
+    ll weight;
+    ll from, to;
+};
+
+bool operator<(const Edge &lhs, const Edge &rhs){
+    return lhs.weight < rhs.weight || (lhs.weight == rhs.weight && lhs.from < rhs.from);
 }
 
 void solve() {
     int n;
     cin >> n;
-    generate(n, 0, 0, "");
+
+    vector<ll> points(n);
+    DSU<ll>dsu;
+
+    for (int i = 0; i < n; ++i) {
+        cin >> points[i];
+        dsu.make_set(points[i]);
+    }
+
+    sort(points.begin(), points.end());
+
+    vector<Edge> edges(n - 1);
+
+    for (int i = 0; i < n-1; ++i) {
+        Edge edge{};
+        edge.from = points[i];
+        edge.to = points[i+1];
+        edge.weight = edge.to - edge.from;
+        edges[i] = edge;
+    }
+    
+    sort(edges.begin(), edges.end());
+
+    for(auto edge: edges){
+        if(dsu.find_set(edge.from) != dsu.find_set(edge.to)){
+            auto data1 = dsu.getData(dsu.find_set(edge.from));
+            auto data2 = dsu.getData(dsu.find_set(edge.to));
+            cout << data1.min << ' ' << data1.max << ' ' << data2.min << ' ' << data2.max;
+            cout << '\n';
+            dsu.union_sets(edge.from, edge.to);
+        }
+    }
 }
 
 signed main() {
